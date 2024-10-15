@@ -134,22 +134,27 @@ async function buildServerCSS() {
         ...commonBuildOptions,
     });
 
-    let files = (await readdir('dist/entries'))
-        .filter(name => name.endsWith('.css'));
-
-    if (files.length === 0)
-        return;
-
     try {
-        await access('res/-');
+        let files = (await readdir('dist/entries'))
+            .filter(name => name.endsWith('.css'));
+
+        if (files.length === 0)
+            return;
+
+        try {
+            await access('res/-');
+        }
+        catch {
+            await mkdir('res/-');
+        }
+
+        await Promise.all(
+            files.map(name => copyFile(`dist/entries/${name}`, `res/-/${name}`)),
+        );
     }
     catch {
-        await mkdir('res/-');
+        // ok, no 'dist/entries'
     }
-
-    await Promise.all(
-        files.map(name => copyFile(`dist/entries/${name}`, `res/-/${name}`)),
-    );
 }
 
 function toCamelCase(s: string) {
