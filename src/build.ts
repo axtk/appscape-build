@@ -164,9 +164,8 @@ function toCamelCase(s: string) {
 }
 
 function toEntryImport({in: path, out: name}: EntryPoint) {
-    let importPath = posix.join(
-        ...relative(cwd, path).replace(/(\/index)?\.[jt]sx?$/, '').split(sep),
-    );
+    let importPath = posix.join(...relative(cwd, path).split(sep))
+        .replace(/(\/index)?\.[jt]sx?$/, '');
 
     return `import {server as ${toCamelCase(name)}} from '~/${importPath}';`;
 }
