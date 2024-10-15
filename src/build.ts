@@ -158,9 +158,12 @@ async function buildServerCSS() {
 }
 
 function toCamelCase(s: string) {
-    return s
-        .replace(/(^[\s_-]|[\s_-]$)/g, '')
+    let prefix = s.match(/^[\s_-]+/)?.[0] ?? '';
+    let t = s
+        .slice(prefix.length)
         .replace(/[\s_-](\w)/g, (_, c) => c.toUpperCase());
+
+    return prefix + t;
 }
 
 function toEntryImport({in: path, out: name}: EntryPoint) {
