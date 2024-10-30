@@ -13,8 +13,46 @@ type EntryPoint = {
     out: string;
 };
 
+type PackageJSON = {
+    type?: string;
+    dependencies?: Record<string, string>;
+};
+
+let cachedServerExternals: string[] | undefined;
 let cachedEntries: Record<string, EntryPoint[]> = {};
 let serverAliases: Record<string, string> = {};
+
+async function readJSON<T = unknown>(path: string) {
+    try {
+        return JSON.parse(
+            (await readFile(join(cwd, path))).toString(),
+        ) as T;
+    }
+    catch {
+        return {} as T;
+    }
+}
+
+async function getServerExternals() {
+    if (!cachedServerExternals) {
+        let {dependencies = {}} = await readJSON<PackageJSON>('package.json');
+        let depNames = Object.keys(dependencies);
+
+        let nonModuleDeps = await Promise.all(
+            depNames.map(async name => {
+                let {type} = await readJSON<PackageJSON>(
+                    `node_modules/${name}/package.json`,
+                );
+
+                return type === 'module' ? undefined : name;
+            }),
+        );
+
+        cachedServerExternals = nonModuleDeps.filter(name => name !== undefined);
+    }
+
+    return cachedServerExternals;
+}
 
 async function getEntries() {
     try {
@@ -23,6 +61,7 @@ async function getEntries() {
         let dirs = await Promise.all(
             list.map(async name => {
                 let itemStat = await lstat(join(cwd, 'src/entries', name));
+
                 return itemStat.isDirectory() ? name : undefined;
             }),
         );
@@ -109,14 +148,15 @@ async function setup() {
 }
 
 async function buildServer() {
+    let external = await getServerExternals();
+
     await esbuild.build({
         entryPoints: ['src/main/index.ts'],
         bundle: true,
         outdir: 'dist/main',
         platform: 'node',
         alias: serverAliases,
-        external: ['./dist/entries/*'],
-        packages: 'external',
+        external: [...external, './dist/entries/*'],
         ...commonBuildOptions,
     });
 }
@@ -136,14 +176,17 @@ async function buildClient() {
 }
 
 async function buildServerEntryPoints() {
-    let entryPoints = await getServerEntryPoints();
+    let [entryPoints, external] = await Promise.all([
+        getServerEntryPoints(),
+        getServerExternals(),
+    ]);
 
     await esbuild.build({
         entryPoints,
         bundle: true,
         outdir: 'dist/entries',
         platform: 'node',
-        packages: 'external',
+        external,
         ...commonBuildOptions,
     });
 
