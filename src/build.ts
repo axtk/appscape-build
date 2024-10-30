@@ -13,6 +13,8 @@ type EntryPoint = {
     out: string;
 };
 
+let cachedEntries: Record<string, EntryPoint[]> = {};
+
 async function getEntries() {
     try {
         let list = await readdir(join(cwd, 'src/entries'));
@@ -62,22 +64,28 @@ async function getEntryPoints(name: string | string[]): Promise<EntryPoint[]> {
 }
 
 async function getClientEntryPoints() {
-    return getEntryPoints([
-        'index',
-        'client',
-        'csr',
-        'client/index',
-        'csr/index',
-    ]);
+    if (!cachedEntries.client)
+        cachedEntries.client = await getEntryPoints([
+            'index',
+            'client',
+            'csr',
+            'client/index',
+            'csr/index',
+        ]);
+
+    return cachedEntries.client;
 }
 
 async function getServerEntryPoints() {
-    return getEntryPoints([
-        'server',
-        'ssr',
-        'server/index',
-        'ssr/index',
-    ]);
+    if (!cachedEntries.server)
+        cachedEntries.server = await getEntryPoints([
+            'server',
+            'ssr',
+            'server/index',
+            'ssr/index',
+        ]);
+
+    return cachedEntries.server;
 }
 
 const commonBuildOptions: Partial<BuildOptions> = {
@@ -105,6 +113,7 @@ async function buildServer() {
         bundle: true,
         outdir: 'dist/main',
         platform: 'node',
+        external: ['./src/main/entries.ts'],
         ...commonBuildOptions,
     });
 }
@@ -123,7 +132,7 @@ async function buildClient() {
     });
 }
 
-async function buildServerCSS() {
+async function buildServerEntryPoints() {
     let entryPoints = await getServerEntryPoints();
 
     await esbuild.build({
@@ -184,7 +193,7 @@ async function buildEntryIndex() {
     let content = '// Populated automatically during the build phase\n';
 
     if (entryPoints.length === 0)
-        content += 'export const entries = [];';
+        content += 'export const entries = [];\n';
     else {
         let importList = entryPoints.map(toEntryImport).join('\n');
         let entryList = entryPoints.map(toEntryExportItem).join('\n');
@@ -203,22 +212,46 @@ async function buildEntryIndex() {
     return writeFile(path, content);
 }
 
+async function buildCompiledEntryIndex() {
+    await mkdir('dist/main', {recursive: true});
+
+    let path = 'dist/main/entries.js';
+    let entryPoints = await getServerEntryPoints();
+
+    let content = '';
+
+    if (entryPoints.length === 0)
+        content += 'let entries = [];';
+    else {
+        let importList = entryPoints
+            .map(({out: name}) => `    require('../entries/${name}.js'),`)
+            .join('\n');
+
+        content += `let entries = [\n${importList}\n];`;
+    }
+
+    content += '\n\nmodule.exports = {entries};\n';
+
+    return writeFile(path, content);
+}
+
 export type BuildParams = {
     silent?: boolean;
 };
 
 export async function build({silent}: BuildParams | void = {}) {
-    let log = silent ? (() => {}) : console.log;
     let startTime = Date.now();
+    let log = silent ? (() => {}) : console.log;
 
     log('Build started');
 
     await setup();
-    await buildEntryIndex();
-    await buildServerCSS();
     await Promise.all([
+        buildEntryIndex(),
+        buildServerEntryPoints(),
         buildServer(),
         buildClient(),
+        buildCompiledEntryIndex(),
     ]);
 
     log(`Build completed (build time: ${formatDuration(Date.now() - startTime)})`);
