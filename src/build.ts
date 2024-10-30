@@ -3,6 +3,7 @@ import {buildClient} from './utils/buildClient';
 import {buildEntryIndex} from './utils/buildEntryIndex';
 import {buildServer} from './utils/buildServer';
 import {buildServerEntryPoints} from './utils/buildServerEntryPoints';
+import {moveServerCSS} from './utils/moveServerCSS';
 import {setup} from './utils/setup';
 
 export type BuildParams = {
@@ -23,6 +24,7 @@ export async function build({silent}: BuildParams | void = {}) {
         ]).then(() => buildServer()),
         buildClient(),
     ]);
+    await moveServerCSS();
 
     log(`Build completed (build time: ${formatDuration(Date.now() - startTime)})`);
 }
