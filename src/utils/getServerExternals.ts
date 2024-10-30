@@ -3,6 +3,17 @@ import {readJSON} from './readJSON';
 
 let cachedExternals: string[] | undefined;
 
+/**
+ * Collects the `external` build option value allowing to
+ * prevent dependencies from being injected into the main
+ * bundle.
+ *
+ * Unlike the `packages: 'external'` option, the returned
+ * value of this function collects only non-module-type
+ * dependencies to be marked as external in order to avoid
+ * build errors of being unable to `require()` an ES module
+ * (by effectively allowing to bundle module-type dependencies).
+ */
 export async function getServerExternals() {
     if (!cachedExternals) {
         let {
