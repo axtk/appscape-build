@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import {rm} from 'node:fs/promises';
+import {buildEntryIndex} from './utils/buildEntryIndex';
 import {build} from './build';
 
 async function clean() {
@@ -11,6 +12,12 @@ async function run() {
 
     if (args.includes('--clean-only')) {
         await clean();
+        return;
+    }
+
+    if (args.includes('--init')) {
+        await clean();
+        await buildEntryIndex();
         return;
     }
 
