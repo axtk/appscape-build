@@ -116,6 +116,7 @@ async function buildServer() {
         platform: 'node',
         alias: serverAliases,
         external: ['./dist/entries/*'],
+        packages: 'external',
         ...commonBuildOptions,
     });
 }
@@ -142,6 +143,7 @@ async function buildServerEntryPoints() {
         bundle: true,
         outdir: 'dist/entries',
         platform: 'node',
+        packages: 'external',
         ...commonBuildOptions,
     });
 
@@ -202,7 +204,7 @@ async function buildEntryIndex() {
             importList += `import {server as ${importName}} from '${importPath}';\n`;
             exportList += `    ${importName},\n`;
 
-            serverAliases[importPath] = `../entries/${entryName}.js`;
+            serverAliases[importPath] = join(cwd, `dist/entries/${entryName}.js`);
         }
 
         content += `${importList}\nexport const entries = [\n${exportList}];\n`;
@@ -231,8 +233,10 @@ export async function build({silent}: BuildParams | void = {}) {
 
     await setup();
     await Promise.all([
-        buildServerEntryPoints(),
-        buildEntryIndex().then(() => buildServer()),
+        Promise.all([
+            buildServerEntryPoints(),
+            buildEntryIndex(),
+        ]).then(() => buildServer()),
         buildClient(),
     ]);
 
