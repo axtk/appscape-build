@@ -14,6 +14,7 @@ type EntryPoint = {
 };
 
 let cachedEntries: Record<string, EntryPoint[]> = {};
+let serverAliases: Record<string, string> = {};
 
 async function getEntries() {
     try {
@@ -113,7 +114,8 @@ async function buildServer() {
         bundle: true,
         outdir: 'dist/main',
         platform: 'node',
-        external: ['./src/main/entries.ts'],
+        alias: serverAliases,
+        external: ['./dist/entries/*'],
         ...commonBuildOptions,
     });
 }
@@ -175,15 +177,11 @@ function toCamelCase(s: string) {
     return prefix + t;
 }
 
-function toEntryImport({in: path, out: name}: EntryPoint) {
+function toImportPath(path: string) {
     let importPath = posix.join(...relative(cwd, path).split(sep))
         .replace(/(\/index)?\.[jt]sx?$/, '');
 
-    return `import {server as ${toCamelCase(name)}} from '~/${importPath}';`;
-}
-
-function toEntryExportItem({out: name}: EntryPoint) {
-    return `    ${toCamelCase(name)},`;
+    return `~/${importPath}`;
 }
 
 async function buildEntryIndex() {
@@ -195,10 +193,19 @@ async function buildEntryIndex() {
     if (entryPoints.length === 0)
         content += 'export const entries = [];\n';
     else {
-        let importList = entryPoints.map(toEntryImport).join('\n');
-        let entryList = entryPoints.map(toEntryExportItem).join('\n');
+        let importList = '', exportList = '';
 
-        content += `${importList}\n\nexport const entries = [\n${entryList}\n];\n`;
+        for (let {in: entryPath, out: entryName} of entryPoints) {
+            let importPath = toImportPath(entryPath);
+            let importName = toCamelCase(entryName);
+
+            importList += `import {server as ${importName}} from '${importPath}';\n`;
+            exportList += `    ${importName},\n`;
+
+            serverAliases[importPath] = `../entries/${entryName}.js`;
+        }
+
+        content += `${importList}\nexport const entries = [\n${exportList}];\n`;
     }
 
     try {
@@ -208,29 +215,6 @@ async function buildEntryIndex() {
             return;
     }
     catch {}
-
-    return writeFile(path, content);
-}
-
-async function buildCompiledEntryIndex() {
-    await mkdir('dist/main', {recursive: true});
-
-    let path = 'dist/main/entries.js';
-    let entryPoints = await getServerEntryPoints();
-
-    let content = '';
-
-    if (entryPoints.length === 0)
-        content += 'let entries = [];';
-    else {
-        let importList = entryPoints
-            .map(({out: name}) => `    require('../entries/${name}.js'),`)
-            .join('\n');
-
-        content += `let entries = [\n${importList}\n];`;
-    }
-
-    content += '\n\nmodule.exports = {entries};\n';
 
     return writeFile(path, content);
 }
@@ -247,11 +231,9 @@ export async function build({silent}: BuildParams | void = {}) {
 
     await setup();
     await Promise.all([
-        buildEntryIndex(),
         buildServerEntryPoints(),
-        buildServer(),
+        buildEntryIndex().then(() => buildServer()),
         buildClient(),
-        buildCompiledEntryIndex(),
     ]);
 
     log(`Build completed (build time: ${formatDuration(Date.now() - startTime)})`);
