@@ -1,5 +1,6 @@
 import esbuild from 'esbuild';
 import {commonBuildOptions} from '../const/commonBuildOptions';
+import {publicDir} from '../const/publicDir';
 import {getClientEntryPoints} from './getClientEntryPoints';
 
 export async function buildClient() {
@@ -10,7 +11,7 @@ export async function buildClient() {
         bundle: true,
         splitting: true,
         format: 'esm',
-        outdir: 'res/-',
+        outdir: `${publicDir}/-`,
         minify: process.env.NODE_ENV !== 'development',
         ...commonBuildOptions,
     });

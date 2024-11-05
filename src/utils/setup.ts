@@ -1,7 +1,8 @@
 import {rm} from 'node:fs/promises';
+import {publicDir} from '../const/publicDir';
 
 let dirs = [
-    'res/-',
+    `${publicDir}/-`,
     'dist/main',
     'dist/entries',
 ];

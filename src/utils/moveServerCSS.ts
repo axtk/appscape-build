@@ -1,4 +1,5 @@
 import {access, mkdir, readdir, rename, rm} from 'node:fs/promises';
+import {publicDir} from '../const/publicDir';
 
 export async function moveServerCSS() {
     try {
@@ -9,16 +10,16 @@ export async function moveServerCSS() {
             return;
 
         try {
-            await access('res/-');
+            await access(`${publicDir}/-`);
         }
         catch {
-            await mkdir('res/-');
+            await mkdir(`${publicDir}/-`);
         }
 
         await Promise.all(
             cssFiles.map(async name => {
                 let sourcePath = `dist/entries/${name}`;
-                let targetPath = `res/-/${name}`;
+                let targetPath = `${publicDir}/-/${name}`;
 
                 try {
                     await access(targetPath);
