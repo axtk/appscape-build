@@ -15,7 +15,7 @@ export async function buildEntryIndex() {
         let importList = '', exportList = '';
 
         for (let {in: entryPath, out: entryName} of entryPoints) {
-            let importPath = toImportPath(entryPath);
+            let importPath = toImportPath(entryPath, 'src/main');
             let importName = toCamelCase(entryName);
 
             importList += `import {server as ${importName}} from '${importPath}';\n`;
