@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import {rm} from 'node:fs/promises';
+import {buildEntries} from './utils/buildEntries';
 import {buildEntryIndex} from './utils/buildEntryIndex';
 import {build} from './build';
 
@@ -23,6 +24,11 @@ async function run() {
 
     if (args.includes('--clean'))
         await clean();
+
+    if (args.includes('--entries')) {
+        await buildEntries();
+        return;
+    }
 
     await build({
         silent: args.includes('--silent'),
