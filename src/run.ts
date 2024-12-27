@@ -28,10 +28,6 @@ async function run() {
     if (args.includes('--clean'))
         await clean();
 
-    if (args.includes('--entries')) {
-        return;
-    }
-
     await build({
         silent: args.includes('--silent'),
     });
