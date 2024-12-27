@@ -6,7 +6,7 @@ import {toImportPath} from './toImportPath';
 import {writeModifiedFile} from './writeModifiedFile';
 
 export async function buildEntries() {
-    let fileName = `build_${Math.random().toString(36).slice(2)}`;
+    let fileName = `__build${process.cwd().length}`;
     let filePath = `src/main/${fileName}.ts`;
 
     let entryPoints = await getEntryPoints([
