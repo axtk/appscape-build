@@ -18,7 +18,10 @@ async function run() {
 
     if (args.includes('--init')) {
         await clean();
-        await buildEntryIndex();
+        await Promise.all([
+            buildEntryIndex(),
+            buildEntries(),
+        ]);
         return;
     }
 
@@ -26,7 +29,6 @@ async function run() {
         await clean();
 
     if (args.includes('--entries')) {
-        await buildEntries();
         return;
     }
 

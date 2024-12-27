@@ -6,7 +6,7 @@ import {toImportPath} from './toImportPath';
 import {writeModifiedFile} from './writeModifiedFile';
 
 export async function buildEntries() {
-    let fileName = `__build${process.cwd().length}`;
+    let fileName = `build_${Math.random().toString(36).slice(2)}`;
     let filePath = `src/main/${fileName}.ts`;
 
     let entryPoints = await getEntryPoints([
@@ -34,7 +34,7 @@ export async function buildEntries() {
     await esbuild.build({
         entryPoints: [filePath],
         bundle: true,
-        outfile: 'dist/main/build.js',
+        outfile: 'dist/main/init.js',
         platform: 'node',
         ...commonBuildOptions,
     });
