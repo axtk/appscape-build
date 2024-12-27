@@ -34,7 +34,7 @@ export async function buildEntries() {
     await esbuild.build({
         entryPoints: [filePath],
         bundle: true,
-        outfile: 'dist/main/init.js',
+        outfile: 'dist/init.js',
         platform: 'node',
         ...commonBuildOptions,
     });
