@@ -1,8 +1,9 @@
-import {writeFile, unlink} from 'node:fs/promises';
+import {unlink} from 'node:fs/promises';
 import esbuild from 'esbuild';
 import {commonBuildOptions} from '../const/commonBuildOptions';
 import {getEntryPoints} from './getEntryPoints';
 import {toImportPath} from './toImportPath';
+import {writeModifiedFile} from './writeModifiedFile';
 
 export async function buildEntries() {
     let fileName = `build_${Math.random().toString(36).slice(2)}`;
@@ -28,7 +29,7 @@ export async function buildEntries() {
     let content = `${importList}\n\n` +
         `(async () => {\n    await Promise.all([\n${callList}\n    ]);\n})();\n`;
     
-    await writeFile(filePath, content);
+    await writeModifiedFile(filePath, content);
 
     await esbuild.build({
         entryPoints: [filePath],

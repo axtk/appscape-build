@@ -1,6 +1,6 @@
-import {readFile, writeFile} from 'node:fs/promises';
 import {join} from 'node:path';
 import {toImportPath} from './toImportPath';
+import {writeModifiedFile} from './writeModifiedFile';
 
 export type BuildIndexParams = {
     outDir: string;
@@ -32,13 +32,5 @@ export async function buildIndex({
         content += `${importList}\nexport const ${exportName} = [\n${exportList}];\n`;
     }
 
-    try {
-        let prevContent = (await readFile(path)).toString();
-
-        if (content === prevContent)
-            return;
-    }
-    catch {}
-
-    return writeFile(path, content);
+    return writeModifiedFile(path, content);
 }
