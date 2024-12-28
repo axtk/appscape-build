@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 import {rm} from 'node:fs/promises';
-import {buildEntries} from './utils/buildEntries';
+import {buildInit} from './utils/buildInit';
 import {buildEntryIndex} from './utils/buildEntryIndex';
 import {build} from './build';
 
@@ -20,7 +20,7 @@ async function run() {
         await clean();
         await Promise.all([
             buildEntryIndex(),
-            buildEntries(),
+            buildInit(),
         ]);
         return;
     }
