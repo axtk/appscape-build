@@ -16,17 +16,21 @@ async function run() {
         return;
     }
 
-    if (args.includes('--init')) {
+    if (args.includes('--clean'))
         await clean();
-        await Promise.all([
-            buildEntryIndex(),
-            buildInit(),
-        ]);
+
+    if (args.includes('--init-entries-only')) {
+        await buildInit();
         return;
     }
 
-    if (args.includes('--clean'))
-        await clean();
+    if (args.includes('--init-entries'))
+        await buildInit();
+
+    if (args.includes('--init')) {
+        await buildEntryIndex();
+        return;
+    }
 
     await build({
         silent: args.includes('--silent'),
