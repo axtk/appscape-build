@@ -1,28 +1,20 @@
 import {formatDuration} from 'dtfm';
+import type {BuildParams} from './types/BuildParams';
 import {buildClient} from './utils/buildClient';
-import {buildEntryIndex} from './utils/buildEntryIndex';
 import {buildServer} from './utils/buildServer';
-import {buildServerEntryPoints} from './utils/buildServerEntryPoints';
-import {moveServerCSS} from './utils/moveServerCSS';
+import {finalize} from './utils/finalize';
 
-export type BuildParams = {
-    silent?: boolean;
-};
-
-export async function build({silent}: BuildParams | void = {}) {
+export async function build(params: BuildParams) {
     let startTime = Date.now();
-    let log = silent ? (() => {}) : console.log;
+    let log = params.silent ? (() => {}) : console.log;
 
     log('Build started');
 
     await Promise.all([
-        Promise.all([
-            buildServerEntryPoints(),
-            buildEntryIndex(),
-        ]).then(() => buildServer()),
+        buildServer(params),
         buildClient(),
     ]);
-    await moveServerCSS();
+    await finalize();
 
     log(`Build completed (build time: ${formatDuration(Date.now() - startTime)})`);
 }

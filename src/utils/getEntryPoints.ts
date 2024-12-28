@@ -1,17 +1,19 @@
-import type {EntryPoint} from '../types/EntryPoint';
 import {getEntries} from './getEntries';
 import {getFirstAvailable} from './getFirstAvailable';
+
+type EntryPoint = {
+    entry: string;
+    path: string;
+};
 
 export async function getEntryPoints(name: string | string[]): Promise<EntryPoint[]> {
     let entries = await getEntries();
 
-    let buildEntries = await Promise.all(
+    return (await Promise.all(
         entries.map(async entry => {
             let path = await getFirstAvailable(`src/entries/${entry}`, name);
 
-            return path ? {in: path, out: entry} : undefined;
+            return path === undefined ? undefined : {entry, path};
         }),
-    );
-
-    return buildEntries.filter(item => item !== undefined);
+    )).filter(item => item !== undefined);
 }

@@ -1,8 +1,6 @@
 #!/usr/bin/env node
 import {rm} from 'node:fs/promises';
 import {publicDir} from './const/publicDir';
-import {buildInit} from './utils/buildInit';
-import {buildEntryIndex} from './utils/buildEntryIndex';
 import {build} from './build';
 
 async function clean() {
@@ -23,21 +21,10 @@ async function run() {
     if (args.includes('--clean'))
         await clean();
 
-    if (args.includes('--init-entries-only')) {
-        await buildInit();
-        return;
-    }
-
-    if (args.includes('--init-entries'))
-        await buildInit();
-
-    if (args.includes('--init')) {
-        await buildEntryIndex();
-        return;
-    }
-
     await build({
         silent: args.includes('--silent'),
+        init: args.includes('--init'),
+        skipInit: args.includes('--skip-init'),
     });
 }
 

@@ -1,13 +1,16 @@
 import esbuild from 'esbuild';
 import {commonBuildOptions} from '../const/commonBuildOptions';
 import {publicDir} from '../const/publicDir';
-import {getClientEntryPoints} from './getClientEntryPoints';
+import {getEntryPoints} from './getEntryPoints';
 
 export async function buildClient() {
-    let entryPoints = await getClientEntryPoints();
+    let clientEntries = await getEntryPoints([
+        'client',
+        'client/index',
+    ]);
 
     await Promise.all(
-        entryPoints.map(({in: path, out: entry}) =>
+        clientEntries.map(({entry, path}) =>
             esbuild.build({
                 entryPoints: [path],
                 bundle: true,
