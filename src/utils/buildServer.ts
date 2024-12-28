@@ -67,7 +67,7 @@ export async function buildServer({init, skipInit}: BuildParams) {
                 if (initEntries.length === 0)
                     tail.push(
                         '\n// Calls all `init` exports from `src/entries/*/init(/index)?.(js|ts)`' +
-                        '\nexport async function init() {}',
+                        '\nexport /* async */ function init() {}',
                     );
                 else {
                     tail.push(
