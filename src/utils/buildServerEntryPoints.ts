@@ -9,12 +9,16 @@ export async function buildServerEntryPoints() {
         getServerExternals(),
     ]);
 
-    await esbuild.build({
-        entryPoints,
-        bundle: true,
-        outdir: 'dist/entries',
-        platform: 'node',
-        external,
-        ...commonBuildOptions,
-    });
+    await Promise.all(
+        entryPoints.map(({in: path, out: entry}) =>
+            esbuild.build({
+                entryPoints: [path],
+                bundle: true,
+                outfile: `dist/entries/${entry}/server.js`,
+                platform: 'node',
+                external,
+                ...commonBuildOptions,
+            })
+        ),
+    );
 }

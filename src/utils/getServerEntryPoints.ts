@@ -7,9 +7,7 @@ export async function getServerEntryPoints() {
     if (!entryPoints)
         entryPoints = await getEntryPoints([
             'server',
-            'ssr',
             'server/index',
-            'ssr/index',
         ]);
 
     return entryPoints;

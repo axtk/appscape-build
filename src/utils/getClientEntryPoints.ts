@@ -6,11 +6,8 @@ let entryPoints: EntryPoint[] | undefined;
 export async function getClientEntryPoints() {
     if (!entryPoints)
         entryPoints = await getEntryPoints([
-            'index',
-            'client',
-            'csr',
             'client/index',
-            'csr/index',
+            'ui/index',
         ]);
 
     return entryPoints;
