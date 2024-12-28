@@ -1,11 +1,15 @@
 #!/usr/bin/env node
 import {rm} from 'node:fs/promises';
+import {publicDir} from './const/publicDir';
 import {buildInit} from './utils/buildInit';
 import {buildEntryIndex} from './utils/buildEntryIndex';
 import {build} from './build';
 
 async function clean() {
-    return rm('dist', {recursive: true, force: true});
+    return Promise.all(
+        ['dist', `${publicDir}/-`]
+            .map(dir => rm(dir, {recursive: true, force: true})),
+    );
 }
 
 async function run() {

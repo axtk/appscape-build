@@ -4,7 +4,6 @@ import {buildEntryIndex} from './utils/buildEntryIndex';
 import {buildServer} from './utils/buildServer';
 import {buildServerEntryPoints} from './utils/buildServerEntryPoints';
 import {moveServerCSS} from './utils/moveServerCSS';
-import {setup} from './utils/setup';
 
 export type BuildParams = {
     silent?: boolean;
@@ -16,7 +15,6 @@ export async function build({silent}: BuildParams | void = {}) {
 
     log('Build started');
 
-    await setup();
     await Promise.all([
         Promise.all([
             buildServerEntryPoints(),
