@@ -5,8 +5,8 @@ import {getEntryPoints} from './getEntryPoints';
 
 export async function buildClient() {
     let clientEntries = await getEntryPoints([
-        'client',
         'client/index',
+        'ui/index',
     ]);
 
     await Promise.all(
