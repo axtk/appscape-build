@@ -46,7 +46,10 @@ export async function buildServer({init, skipInit}: BuildParams) {
                 let tail: string[] = [];
 
                 if (serverEntries.length === 0)
-                    tail.push('\nexport const server = [];');
+                    tail.push(
+                        '\n// Returns all `server` exports from `src/entries/*/server(/index)?.(js|ts)`' +
+                        '\nexport const server = [];',
+                    );
                 else {
                     tail.push('\nexport const server = [');
 
@@ -62,7 +65,10 @@ export async function buildServer({init, skipInit}: BuildParams) {
                 }
 
                 if (initEntries.length === 0)
-                    tail.push('\nexport async function init() {}');
+                    tail.push(
+                        '\n// Calls all `init` exports from `src/entries/*/init(/index)?.(js|ts)`' +
+                        '\nexport async function init() {}',
+                    );
                 else {
                     tail.push(
                         '\nexport async function init() {' +
