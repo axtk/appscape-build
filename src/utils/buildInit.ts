@@ -1,21 +1,33 @@
-import {unlink} from 'node:fs/promises';
+import {access, mkdir, writeFile, unlink} from 'node:fs/promises';
 import esbuild from 'esbuild';
 import {commonBuildOptions} from '../const/commonBuildOptions';
 import {getEntryPoints} from './getEntryPoints';
 import {toImportPath} from './toImportPath';
 import {writeModifiedFile} from './writeModifiedFile';
 
+let outputPath = 'dist/init.js';
+
 export async function buildInit() {
     let fileName = `init_${Math.random().toString(36).slice(2)}`;
-    let filePath = `src/main/${fileName}.ts`;
+    let inputPath = `src/main/${fileName}.ts`;
 
     let entryPoints = await getEntryPoints([
         'init',
         'init/index',
     ]);
 
-    if (entryPoints.length === 0)
+    if (entryPoints.length === 0) {
+        try {
+            await access('dist');
+        }
+        catch {
+            await mkdir('dist');
+        }
+
+        await writeFile(outputPath, '');
+
         return;
+    }
 
     let importList = '', callList = '';
 
@@ -29,15 +41,15 @@ export async function buildInit() {
     let content = `${importList}\n\n` +
         `(async () => {\n    await Promise.all([\n${callList}\n    ]);\n})();\n`;
     
-    await writeModifiedFile(filePath, content);
+    await writeModifiedFile(inputPath, content);
 
     await esbuild.build({
-        entryPoints: [filePath],
+        entryPoints: [inputPath],
         bundle: true,
-        outfile: 'dist/init.js',
+        outfile: outputPath,
         platform: 'node',
         ...commonBuildOptions,
     });
 
-    await unlink(filePath);
+    await unlink(inputPath);
 }
