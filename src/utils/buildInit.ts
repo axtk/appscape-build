@@ -6,12 +6,12 @@ import {toImportPath} from './toImportPath';
 import {writeModifiedFile} from './writeModifiedFile';
 
 export async function buildInit() {
-    let fileName = `build_${Math.random().toString(36).slice(2)}`;
+    let fileName = `init_${Math.random().toString(36).slice(2)}`;
     let filePath = `src/main/${fileName}.ts`;
 
     let entryPoints = await getEntryPoints([
-        'build',
-        'build/index',
+        'init',
+        'init/index',
     ]);
 
     if (entryPoints.length === 0)
@@ -22,8 +22,8 @@ export async function buildInit() {
     for (let i = 0; i < entryPoints.length; i++) {
         let importPath = toImportPath(entryPoints[i].in, 'src/main');
     
-        importList += `import {build as build${i}} from '${importPath}';`;
-        callList += `        build${i}(),`;
+        importList += `import {init as init${i}} from '${importPath}';`;
+        callList += `        init${i}(),`;
     }
 
     let content = `${importList}\n\n` +
