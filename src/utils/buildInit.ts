@@ -5,14 +5,16 @@ import {getEntryPoints} from './getEntryPoints';
 import {toImportPath} from './toImportPath';
 import {writeModifiedFile} from './writeModifiedFile';
 
-let outputPath = 'dist/init.js';
+let outputPath = 'dist/entries/init.js';
 
 async function writeBlankInit() {
+    let outputDir = outputPath.split('/').slice(0, -1).join();
+
     try {
-        await access('dist');
+        await access(outputDir);
     }
     catch {
-        await mkdir('dist');
+        await mkdir(outputDir, {recursive: true});
     }
 
     await writeFile(outputPath, '');
