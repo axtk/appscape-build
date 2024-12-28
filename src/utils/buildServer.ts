@@ -72,7 +72,7 @@ export async function buildServer({init, skipInit}: BuildParams) {
                 else {
                     tail.push(
                         '\nexport async function init() {' +
-                        '\n    return Promise.all([',
+                        '\n    await Promise.all([',
                     );
 
                     for (let i = 0; i < initEntries.length; i++) {
