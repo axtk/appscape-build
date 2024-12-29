@@ -5,7 +5,7 @@ import {build} from './build';
 
 async function clean() {
     return Promise.all(
-        ['dist', `${publicDir}/-`]
+        ['dist/entries', 'dist/main', `${publicDir}/-`]
             .map(dir => rm(dir, {recursive: true, force: true})),
     );
 }
