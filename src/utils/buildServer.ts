@@ -51,10 +51,10 @@ export async function buildServer({init, skipInit}: BuildParams) {
                 if (serverEntries.length === 0)
                     tail.push(
                         '\n// Returns all `server` exports from `src/entries/*/server(/index)?.(js|ts)`' +
-                        '\nexport const entries = [];',
+                        '\nexport let entries = [];',
                     );
                 else {
-                    tail.push('\nexport const entries = [');
+                    tail.push('\nexport let entries = [');
 
                     for (let i = 0; i < serverEntries.length; i++) {
                         head.push(
