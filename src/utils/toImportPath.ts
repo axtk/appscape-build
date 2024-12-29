@@ -6,5 +6,8 @@ export function toImportPath(relativePath: string, referencePath = '.') {
         .join(...relative(join(cwd, referencePath), relativePath).split(sep))
         .replace(/(\/index)?\.[jt]sx?$/, '');
 
+    if (importPath && !/^\.+\//.test(importPath))
+        importPath = `./${importPath}`;
+
     return importPath;
 }

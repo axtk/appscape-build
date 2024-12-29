@@ -1,3 +1,4 @@
+import {access, unlink} from 'node:fs/promises';
 import esbuild from 'esbuild';
 import {commonBuildOptions} from '../const/commonBuildOptions';
 import type {BuildParams} from '../types/BuildParams';
@@ -18,6 +19,8 @@ export async function buildServer({init, skipInit}: BuildParams) {
         ]),
         getServerExternals(),
     ]);
+
+    let initPath = `src/entries/init_${Math.random().toString(36).slice(2)}.ts`;
 
     if (!skipInit)
         await Promise.all([
@@ -48,10 +51,10 @@ export async function buildServer({init, skipInit}: BuildParams) {
                 if (serverEntries.length === 0)
                     tail.push(
                         '\n// Returns all `server` exports from `src/entries/*/server(/index)?.(js|ts)`' +
-                        '\nexport const server = [];',
+                        '\nexport const entries = [];',
                     );
                 else {
-                    tail.push('\nexport const server = [');
+                    tail.push('\nexport const entries = [');
 
                     for (let i = 0; i < serverEntries.length; i++) {
                         head.push(
@@ -64,28 +67,6 @@ export async function buildServer({init, skipInit}: BuildParams) {
                     tail.push('];');
                 }
 
-                if (initEntries.length === 0)
-                    tail.push(
-                        '\n// Calls all `init` exports from `src/entries/*/init(/index)?.(js|ts)`' +
-                        '\nexport /* async */ function init() {}',
-                    );
-                else {
-                    tail.push(
-                        '\nexport async function init() {' +
-                        '\n    await Promise.all([',
-                    );
-
-                    for (let i = 0; i < initEntries.length; i++) {
-                        head.push(
-                            `import {init as init${i}} from ` +
-                            `'${toImportPath(initEntries[i].path, 'src/main')}';`,
-                        );
-                        tail.push(`        init${i}(),`);
-                    }
-
-                    tail.push('    ]);\n}');
-                }
-
                 return writeModifiedFile(
                     'src/main/entries.ts',
                     '// Populated automatically during the build phase\n' +
@@ -93,15 +74,63 @@ export async function buildServer({init, skipInit}: BuildParams) {
                     tail.join('\n') + '\n',
                 );
             })(),
+            (async () => {
+                let head: string[] = [];
+                let tail: string[] = [];
+
+                if (initEntries.length === 0)
+                    tail.push('(/* async */ () => {})();');
+                else {
+                    tail.push(
+                        '\n(async () => {' +
+                        '\n    await Promise.all([',
+                    );
+
+                    for (let i = 0; i < initEntries.length; i++) {
+                        head.push(
+                            `import {init as init${i}} from ` +
+                            `'${toImportPath(initEntries[i].path, 'src/entries')}';`,
+                        );
+                        tail.push(`        init${i}(),`);
+                    }
+
+                    tail.push('    ]);\n})();');
+                }
+
+                return writeModifiedFile(
+                    initPath,
+                    '// Populated automatically during the build phase\n' +
+                    head.join('\n') + '\n' +
+                    tail.join('\n') + '\n',
+                );
+            })(),
         ]);
 
-    if (!init)
-        await esbuild.build({
+    await Promise.all([
+        skipInit ? null : esbuild.build({
+            ...commonBuildOptions,
+            entryPoints: [initPath],
+            bundle: false,
+            outfile: 'dist/entries/init.js',
+            platform: 'node',
+            format: 'cjs',
+            banner: {
+                js: '// Calls all `init` exports from `src/entries/*/init(/index)?.(js|ts)`',
+            },
+        }),
+        init ? null : esbuild.build({
+            ...commonBuildOptions,
             entryPoints: ['src/main/index.ts'],
             bundle: true,
-            outdir: 'dist/main',
+            outfile: 'dist/main/index.js',
             platform: 'node',
             external: [...external, '../entries/*'],
-            ...commonBuildOptions,
-        });
+        }),
+    ]);
+
+    try {
+        await access(initPath);
+        await unlink(initPath);
+    }
+    catch {}
 }
