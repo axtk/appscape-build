@@ -1,4 +1,4 @@
-import {access, mkdir, rename, rm} from 'node:fs/promises';
+import {access, mkdir, rename} from 'node:fs/promises';
 import {publicDir} from '../const/publicDir';
 import {getEntries} from './getEntries';
 
@@ -21,19 +21,16 @@ export async function finalize() {
             let targetPath = `${publicDir}/-/${entry}/index.css`;
 
             try {
-                await access(targetPath);
-                await rm(sourcePath);
+                await access(`${publicDir}/-/${entry}`);
             }
             catch {
-                try {
-                    await access(`${publicDir}/-/${entry}`);
-                }
-                catch {
-                    await mkdir(`${publicDir}/-/${entry}`, {recursive: true});
-                }
+                await mkdir(`${publicDir}/-/${entry}`, {recursive: true});
+            }
 
+            try {
                 await rename(sourcePath, targetPath);
             }
+            catch {}
         }),
     );
 }
